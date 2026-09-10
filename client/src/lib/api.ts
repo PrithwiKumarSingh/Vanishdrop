@@ -9,7 +9,7 @@ const parseResponse = async <T>(response: Response): Promise<T> => {
 };
 
 export const fetchFiles = async (): Promise<SharedFile[]> => {
-  const response = await fetch(`${apiBaseUrl}/files`);
+  const response = await fetch(`${apiBaseUrl}/api/files`);
   const payload = await parseResponse<FilesResponse>(response);
   return payload.files;
 };
@@ -36,7 +36,7 @@ export const uploadFile = async (file: File, onProgress?: (progress: number) => 
 };
 
 export const deleteFile = async (fileId: string, deleteToken: string): Promise<void> => {
-  const response = await fetch(`${apiBaseUrl}/files/${fileId}`, {
+  const response = await fetch(`${apiBaseUrl}/api/files/${fileId}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${deleteToken}` },
   });
