@@ -1,146 +1,689 @@
-# VanishDrop
+# 🚀 VanishDrop
 
-VanishDrop is a public, no-login file bridge for moving supported documents between devices. Upload from a laptop, open the same page on a phone, and download the file. Every file is publicly visible for up to 12 hours and is then removed.
+> **A simple, temporary, and anonymous way to share files between devices.**
 
-## Features
+VanishDrop is an open-source file-sharing application that lets users upload a file from one device and download it from another without creating an account.
 
-- PDF, DOC, DOCX, XLS and XLSX uploads
-- 10 MB configurable maximum file size
-- Drag-and-drop plus keyboard-friendly file picker
-- Public active-file feed with expiration countdowns   
-- Anonymous ownership tokens stored only in the uploader's browser
-- Manual deletion available five minutes after upload
-- Automatic storage cleanup every five minutes
-- IP-based request, upload and download rate limits
-- Supabase Storage provider with a local filesystem fallback
-- Responsive React + Tailwind UI for phones, tablets and desktop
+Files are temporary and automatically expire after a configurable period.
 
-## Architecture
+**Upload → Share → Download → Vanish**
+
+---
+
+## ✨ Features
+
+- 📄 Support for **PDF, DOC, DOCX, XLS, and XLSX**
+- 📦 Configurable maximum file size
+- 🖱️ Drag-and-drop file upload
+- ⌨️ Keyboard-friendly file picker
+- 🌐 Public active-file feed
+- ⏳ File expiration countdown
+- 🔐 Anonymous ownership using secure deletion tokens
+- 🗑️ Manual file deletion after a configurable lock period
+- 🧹 Automatic cleanup of expired files
+- 🚦 IP-based rate limiting
+- ☁️ Supabase Storage support
+- 💾 Local filesystem fallback for development
+- 📱 Responsive user interface
+- 🧩 Modular storage provider architecture
+- 🚫 No login or registration required
+
+---
+
+## 🎯 Why VanishDrop?
+
+Sometimes you just want to move a file from one device to another.
 
 ```text
-client/ React + Vite + TypeScript + Tailwind
-        |
-        v
-server/ Express + TypeScript + Mongoose
-        |                    |
-        v                    v
-     MongoDB          StorageProvider
-                      (Supabase by default, local fallback)
+Laptop
+   ↓
+Upload
+   ↓
+VanishDrop
+   ↓
+Open on another device
+   ↓
+Download
 ```
 
-The API owns all permission checks. The browser's deletion token is never returned by the public list endpoint and is only stored as a SHA-256 digest in MongoDB.
+No account.  
+No email.  
+No complicated setup.
 
-## Project structure
+Just upload, share, download, and let the file vanish automatically.
+
+---
+
+## 🖥️ Tech Stack
+
+### Frontend
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+
+### Backend
+
+- Node.js
+- Express
+- TypeScript
+
+### Database
+
+- MongoDB
+- Mongoose
+
+### File Storage
+
+- Supabase Storage
+- Local filesystem fallback
+
+### Testing
+
+- Vitest
+
+---
+
+## 🏗️ Architecture
 
 ```text
-client/src/components  Reusable UI components
-client/src/hooks       Data fetching and countdown hooks
-client/src/pages       Route-level screens
-server/src/services    File business logic and storage
-server/src/jobs        Scheduled cleanup
-server/src/models      Mongoose models
-server/src/middleware  Validation, upload and error handling
-server/tests           Vitest business/API tests
+                    ┌─────────────────┐
+                    │      User       │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │  React Client   │
+                    │ TypeScript/Vite │
+                    └────────┬────────┘
+                             │
+                             │ HTTP API
+                             ▼
+                    ┌─────────────────┐
+                    │ Express Server  │
+                    │   TypeScript    │
+                    └────────┬────────┘
+                             │
+                 ┌───────────┴───────────┐
+                 │                       │
+                 ▼                       ▼
+        ┌────────────────┐      ┌─────────────────┐
+        │    MongoDB     │      │ StorageProvider │
+        │                │      │                 │
+        │ File Metadata  │      │ Supabase / Local│
+        └────────────────┘      └─────────────────┘
 ```
 
-## Local setup
+### MongoDB stores
 
-Requirements: Node.js 20+, npm 10+, and MongoDB 7+ (local or Atlas). Create a Supabase project and a private Storage bucket for production.
+- File metadata
+- Original filename
+- File size
+- MIME type
+- Upload time
+- Expiration time
+- Secure deletion token hash
 
-1. Copy `server/.env.example` to `server/.env` and set `MONGODB_URI`, Supabase credentials and a real `TOKEN_SECRET`.
-2. For a split frontend/backend deployment, copy `client/.env.example` to `client/.env` and set `VITE_API_URL` to the API base URL.
-3. Install dependencies from the repository root:
+### Storage provider stores
 
-   ```bash
-   npm install
-   ```
+- The actual uploaded file
 
-4. Start the API and Vite client together:
+---
 
-   ```bash
-   npm run dev
-   ```
+## 🔐 Security
 
-5. Open [http://localhost:5173](http://localhost:5173).
+VanishDrop keeps sensitive operations under backend control.
 
-The API listens on port 5000. The Vite dev server proxies `/api` requests to it.
+### Deletion tokens
 
-## Environment variables
+When a user uploads a file:
 
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `PORT` | Express port | `5000` |
-| `MONGODB_URI` | MongoDB connection string | local VanishDrop DB |
-| `MAX_FILE_SIZE_MB` | Upload limit | `10` |
-| `FILE_EXPIRATION_HOURS` | Public lifetime | `12` |
-| `DELETE_LOCK_MINUTES` | Ownership deletion lock | `5` |
-| `UPLOAD_RATE_LIMIT` | Uploads per window per IP | `10` |
-| `REQUEST_RATE_LIMIT` | General requests per window per IP | `240` |
-| `DOWNLOAD_RATE_LIMIT` | Downloads per window per IP | `120` |
-| `STORAGE_PROVIDER` | Storage adapter selector | `supabase` |
-| `LOCAL_STORAGE_PATH` | Local storage directory when using `local` | `./uploads` |
-| `SUPABASE_URL` | Supabase project URL | — |
-| `SUPABASE_SERVICE_ROLE_KEY` | Backend-only Supabase service key | — |
-| `SUPABASE_BUCKET` | Supabase Storage bucket | `VanishDrop-files` |
-| `CLIENT_URL` | Allowed CORS origin | `http://localhost:5173` |
-| `TOKEN_SECRET` | Required secret for token hashing | — |
-| `VITE_API_URL` | Frontend API base URL | `/api` |
+```text
+Upload File
+     ↓
+Generate Delete Token
+     ↓
+Return Token Once
+     ↓
+Store Token Hash in Database
+```
 
-For Supabase Storage, create a bucket named `VanishDrop-files` and keep it private. `SUPABASE_SERVICE_ROLE_KEY` is backend-only; never expose it through Vite or browser code.
+The raw deletion token should only be available to the uploader.
 
-## API
+The public API should not expose:
+
+- Storage credentials
+- Supabase secret keys
+- Internal storage configuration
+- Raw deletion token hashes
+
+---
+
+## 📁 Project Structure
+
+```text
+VanishDrop/
+│
+├── client/
+│   └── src/
+│       ├── components/
+│       ├── hooks/
+│       └── pages/
+│
+├── server/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── jobs/
+│   │   └── utils/
+│   │
+│   └── tests/
+│
+├── README.md
+└── package.json
+```
+
+---
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+Make sure you have installed:
+
+- Node.js `20+`
+- npm
+- MongoDB
+- A Supabase account for cloud storage
+
+---
+
+## 1️⃣ Clone the repository
+
+```bash
+git clone https://github.com/PrithwiKumarSingh/Vanishdrop.git
+```
+
+Move into the project:
+
+```bash
+cd Vanishdrop
+```
+
+---
+
+## 2️⃣ Install dependencies
+
+Install the required dependencies:
+
+```bash
+npm install
+```
+
+If the frontend and backend are separate applications, install dependencies in their respective directories.
+
+---
+
+## 3️⃣ Configure environment variables
+
+Create a `.env` file for the backend.
+
+Example:
+
+```env
+PORT=5000
+
+MONGODB_URI=your_mongodb_connection_string
+
+MAX_FILE_SIZE_MB=10
+
+FILE_EXPIRATION_HOURS=12
+
+DELETE_LOCK_MINUTES=5
+
+UPLOAD_RATE_LIMIT=10
+REQUEST_RATE_LIMIT=240
+DOWNLOAD_RATE_LIMIT=120
+
+STORAGE_PROVIDER=supabase
+
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SECRET_KEY=your_supabase_secret_key
+SUPABASE_BUCKET=temporary-files
+
+CLIENT_URL=http://localhost:5173
+
+TOKEN_SECRET=your_secure_random_secret
+```
+
+> ⚠️ Never commit `.env` files or secret keys to GitHub.
+
+---
+
+## ☁️ Supabase Storage Setup
+
+Create a private bucket in Supabase Storage.
+
+Example:
+
+```text
+temporary-files
+```
+
+Configure your backend:
+
+```env
+STORAGE_PROVIDER=supabase
+
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SECRET_KEY=your_supabase_secret_key
+SUPABASE_BUCKET=temporary-files
+```
+
+### Important
+
+Your Supabase secret key must only be used on the backend.
+
+```text
+❌ React Frontend
+        ↓
+   Secret Key
+
+
+✅ Express Backend
+        ↓
+   Secret Key
+        ↓
+Supabase Storage
+```
+
+---
+
+## ▶️ Run the Application
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Typical local URLs:
+
+```text
+Frontend
+http://localhost:5173
+
+Backend
+http://localhost:5000
+```
+
+---
+
+# 🔌 API Reference
+
+## Health Check
 
 ### `GET /api/health`
 
-Returns `{ "status": "ok", "timestamp": "..." }`.
+Returns the API status.
+
+Example response:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+---
+
+## Get Active Files
 
 ### `GET /api/files`
 
-Returns active, non-expired files sorted newest first. No ownership credentials or storage paths are returned.
+Returns active and non-expired files.
+
+Files are typically sorted from newest to oldest.
+
+---
+
+## Upload File
 
 ### `POST /api/files`
 
-Send `multipart/form-data` with a `file` field. Allowed extensions: `.pdf`, `.xls`, `.xlsx`, `.doc`, `.docx`. The response contains public metadata and a one-time `deleteToken` for the uploader.
+Send the request as:
+
+```text
+multipart/form-data
+```
+
+Field name:
+
+```text
+file
+```
+
+Supported formats:
+
+```text
+.pdf
+.doc
+.docx
+.xls
+.xlsx
+```
+
+Example response:
+
+```json
+{
+  "success": true,
+  "file": {
+    "id": "file-id",
+    "originalName": "document.pdf",
+    "size": 102400
+  },
+  "deleteToken": "..."
+}
+```
+
+> The deletion token should be stored securely by the uploader.
+
+---
+
+## Download File
 
 ### `GET /api/files/:id/download`
 
-Streams an active file if it exists and has not reached `expiresAt`.
+Downloads the requested file if:
+
+- The file exists
+- The file has not expired
+- The file is available
+
+---
+
+## Delete File
 
 ### `DELETE /api/files/:id`
 
-Requires `Authorization: Bearer <deleteToken>`. The backend verifies the token and rejects requests before `deleteAvailableAt`.
+Requires a deletion token:
 
-## Expiration and deletion
+```text
+Authorization: Bearer <deleteToken>
+```
 
-Each document stores `uploadedAt`, `deleteAvailableAt` and `expiresAt`. The cleanup worker runs every five minutes, removes expired files from the configured storage provider, then removes the MongoDB record. Cleanup is idempotent and logs failures for operational visibility. The database also has an index on `expiresAt` for efficient expiration scans; the application worker remains responsible for physical file deletion.
+The backend verifies the token before deleting the file.
 
-## Testing and production build
+---
+
+# ⏳ File Lifecycle
+
+Each uploaded file has important timestamps:
+
+```text
+uploadedAt
+      │
+      ▼
+
+deleteAvailableAt
+      │
+      ▼
+
+expiresAt
+```
+
+Example:
+
+```text
+10:00 AM
+Upload File
+
+     ↓
+
+10:05 AM
+Manual deletion becomes available
+
+     ↓
+
+10:00 PM
+File expires automatically
+```
+
+A cleanup worker can:
+
+1. Find expired files
+2. Delete the actual file from storage
+3. Remove the associated database record
+
+---
+
+# 🧩 Storage Providers
+
+VanishDrop uses a storage abstraction:
+
+```text
+StorageProvider
+      │
+      ├── SupabaseStorageProvider
+      │
+      └── LocalStorageProvider
+```
+
+This architecture makes it easier to switch storage providers without rewriting core business logic.
+
+Potential future providers:
+
+- AWS S3
+- Cloudflare R2
+- Google Cloud Storage
+
+---
+
+# ⚙️ Environment Variables
+
+| Variable | Description | Example |
+|---|---|---|
+| `PORT` | Express server port | `5000` |
+| `MONGODB_URI` | MongoDB connection string | — |
+| `MAX_FILE_SIZE_MB` | Maximum upload size | `10` |
+| `FILE_EXPIRATION_HOURS` | File lifetime | `12` |
+| `DELETE_LOCK_MINUTES` | Delay before manual deletion | `5` |
+| `UPLOAD_RATE_LIMIT` | Upload limit | `10` |
+| `REQUEST_RATE_LIMIT` | General request limit | `240` |
+| `DOWNLOAD_RATE_LIMIT` | Download limit | `120` |
+| `STORAGE_PROVIDER` | Storage provider | `supabase` |
+| `SUPABASE_URL` | Supabase project URL | — |
+| `SUPABASE_SECRET_KEY` | Backend secret key | — |
+| `SUPABASE_BUCKET` | Storage bucket name | `temporary-files` |
+| `CLIENT_URL` | Frontend origin | `http://localhost:5173` |
+| `TOKEN_SECRET` | Application secret | — |
+
+---
+
+# 🧪 Testing
+
+Run type checking:
 
 ```bash
 npm run typecheck
+```
+
+Run tests:
+
+```bash
 npm test
+```
+
+Create a production build:
+
+```bash
 npm run build
 ```
 
-The Vitest suite covers the security-sensitive validation, token, expiry and deletion-window rules without needing a database. For a full endpoint smoke test, run MongoDB locally, start the API and exercise the documented upload/list/download/delete endpoints.
+> Available commands may vary depending on the final project structure.
 
-## Production deployment
+---
 
-- Build the client and serve its `client/dist` from Vercel, Netlify, Cloudflare Pages or a CDN. Set `VITE_API_URL` to the public API base URL at build time.
-- Run the Express server on Render, Railway, Fly.io, a VPS or AWS. Supabase Storage means the API server does not need a persistent local disk.
-- Use MongoDB Atlas.
-- Use `STORAGE_PROVIDER=supabase` with the Supabase Storage credentials for production. The `StorageProvider` interface keeps storage concerns isolated from the file business logic.
-- Set `CLIENT_URL` to the exact frontend origin and use HTTPS.
-- Do not use an ephemeral local disk in a horizontally scaled deployment.
+# 🌍 Deployment
 
-## Troubleshooting
+Recommended production architecture:
 
-- `MONGODB_URI is not configured`: copy `server/.env.example` to `server/.env` and set it.
-- `STORAGE_PROVIDER=supabase requires ...`: add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to the backend environment.
-- `Invalid path specified in request URL`: set `SUPABASE_URL` to the project URL only, such as `https://your-project-ref.supabase.co`; do not paste `/storage/v1` or `/storage/v1/s3`. Set `SUPABASE_BUCKET` to only the bucket ID, such as `VanishDrop-files`.
-- Uploads are rejected: check the file extension, detected MIME/signature and 10 MB limit.
-- Files disappear after a restart with local storage: use `STORAGE_PROVIDER=supabase` in production or attach a persistent volume when intentionally using the local fallback.
+```text
+                 Frontend
+                    │
+                    ▼
+        Vercel / Netlify / Cloudflare
+                    │
+                    ▼
+               Express API
+                    │
+            ┌───────┴────────┐
+            │                │
+            ▼                ▼
+        MongoDB          Supabase
+         Atlas            Storage
+```
 
-## Future improvements
+### Recommended services
 
-QR handoff links, password-protected rooms, multi-file batches, image support, virus scanning, resumable uploads and download analytics can be layered onto the existing API without changing the anonymous core flow.
+| Service | Options |
+|---|---|
+| Frontend | Vercel, Netlify, Cloudflare Pages |
+| Backend | Render, Railway, Fly.io |
+| Database | MongoDB Atlas |
+| File Storage | Supabase Storage |
+
+---
+
+# 🗺️ Roadmap
+
+Future improvements may include:
+
+- [ ] QR code file sharing
+- [ ] Shareable file links
+- [ ] Password-protected files
+- [ ] Multi-file uploads
+- [ ] Image support
+- [ ] File preview
+- [ ] Virus scanning
+- [ ] Resumable uploads
+- [ ] Download analytics
+- [ ] Additional storage providers
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome! 🎉
+
+If you would like to improve VanishDrop:
+
+1. Fork the repository.
+2. Create a new branch.
+
+```bash
+git checkout -b feature/amazing-feature
+```
+
+3. Make your changes.
+4. Commit your changes.
+
+```bash
+git commit -m "feat: add amazing feature"
+```
+
+5. Push the branch.
+
+```bash
+git push origin feature/amazing-feature
+```
+
+6. Open a Pull Request.
+
+Please ensure that your contribution is:
+
+- Clean
+- Tested
+- Documented
+
+---
+
+# 🐛 Reporting Bugs
+
+Found a bug?
+
+Please open an issue and include:
+
+- A clear description of the problem
+- Steps to reproduce it
+- Expected behavior
+- Actual behavior
+- Screenshots, if applicable
+
+---
+
+# 💡 Feature Requests
+
+Have an idea?
+
+Open an issue describing:
+
+- The problem you want to solve
+- Your proposed solution
+- Any alternative approaches
+
+---
+
+# 📄 License
+
+This project is intended to be open source.
+
+Consider adding an MIT License:
+
+```text
+MIT License
+```
+
+---
+
+# 👨‍💻 Author
+
+**Prithwi Kumar Singh**
+
+VanishDrop is built as an open-source project for exploring:
+
+- Full-stack development
+- Backend architecture
+- File storage systems
+- API design
+- Application security
+- Temporary file sharing
+
+---
+
+# ⭐ Support
+
+If you find VanishDrop useful:
+
+- ⭐ Star the repository
+- 🐛 Report bugs
+- 💡 Suggest features
+- 🤝 Contribute to the project
+
+---
+
+<div align="center">
+
+## 🚀 VanishDrop
+
+### **Upload. Share. Download. Vanish.**
+
+Made with ❤️ using React, TypeScript, Express, MongoDB, and Supabase.
+
+</div>
