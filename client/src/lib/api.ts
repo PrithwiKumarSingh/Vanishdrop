@@ -18,7 +18,7 @@ export const uploadFile = async (file: File, onProgress?: (progress: number) => 
   // XMLHttpRequest is used here only for upload progress; all other API calls use fetch.
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
-    request.open('POST', `${apiBaseUrl}/files`);
+    request.open('POST', `${apiBaseUrl}/api/files`);
     request.responseType = 'json';
     request.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable) onProgress?.(Math.round((event.loaded / event.total) * 100));
