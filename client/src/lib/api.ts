@@ -43,4 +43,4 @@ export const deleteFile = async (fileId: string, deleteToken: string): Promise<v
   await parseResponse<{ success: true }>(response);
 };
 
-export const getDownloadUrl = (fileId: string): string => `${apiBaseUrl}/files/${fileId}/download`;
+export const getDownloadUrl = (fileId: string): string => `${apiBaseUrl}/api/files/${fileId}/download`;
