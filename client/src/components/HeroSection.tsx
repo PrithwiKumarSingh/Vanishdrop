@@ -1,5 +1,5 @@
 import { ArrowDown, Check, Cloud, Sparkles, TimerReset, UploadCloud } from 'lucide-react';
-import { UploadVanishDrop } from './UploadVanishDrop';
+import { UploadVanishDrop } from './Uploadvanishdrop';
 
 interface HeroSectionProps {
   uploading: boolean;
