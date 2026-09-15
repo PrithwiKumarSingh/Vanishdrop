@@ -8,7 +8,7 @@ interface UploadVanishDropProps {
   onFile: (file: File) => void;
 }
 
-const maxSize = 10 * 1024 * 1024;
+const maxSize = 40 * 1024 * 1024;
 
 export const UploadVanishDrop = ({ uploading, progress, onFile }: UploadVanishDropProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
